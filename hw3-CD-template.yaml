@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: 'AWS::Serverless-2016-10-31'
+Description: "Spam Detection System"
+Resources:
+  EmailStoreBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub "cderror-905863309174"
+
+  EmailBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref EmailStoreBucket
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+        - Sid: AllowSESPuts
+          Effect: Allow
+          Principal:
+            Service: ses.amazonaws.com
+          Action: s3:PutObject
+          Resource: !Join
+            - ''
+            - - 'arn:aws:s3:::'
+              - !Ref EmailStoreBucket
+              - /*
+          Condition:
+            StringEquals:
+              aws:Referer: "905863309174"
+
+  ReceiptRule:
+    Type: "AWS::SES::ReceiptRule"
+    Properties:
+      Rule:
+        Name: spamrole21
+        Enabled: true
+        ScanEnabled: true
+        Actions:
+        - S3Action:
+            BucketName: !Ref EmailStoreBucket
+      RuleSetName: samp
+
+  spamEmailHandlerLayerLF1:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: s3://spam-detection-bkt/spam_detection-e75064f6-dff5-4e69-8dcb-4d3cd993cbcb.zip
+      FunctionName: spam-detect-fucntion-32
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.6
+      Description: "Lambda function for handle email in S3, check and send back"
+      Timeout: 30
+      Policies:
+        Statement:
+        - Effect: Allow
+          Action: s3:GetObject*
+          Resource: !Sub "arn:aws:s3:::cderror-905863309174/*"
+      Events:
+        Upload:
+          Properties:
+            Bucket: !Ref EmailStoreBucket
+            Events: s3:ObjectCreated:*
+          Type: S3
+      Environment:
+        Variables:
+          REGION: us-east-1
+  
