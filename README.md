@@ -1,8 +1,8 @@
 AWS Spam Detection 
 
-Zhaoze Zhang 		UNI:zz2775
+Zhaoze Zhang 
 
-Zhengyi Li   		UNI:zl3029
+Zhengyi Li   		
 
 
 For cloudFormation, please create a role set and add that name into T1 with RuleSetName:
